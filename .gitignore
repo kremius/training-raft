@@ -33,3 +33,6 @@
 
 # QtCreator project files
 *.user
+
+build/*
+.vscode/*

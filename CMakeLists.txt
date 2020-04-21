@@ -14,6 +14,8 @@ file(GLOB_RECURSE HEADERS CONFIGURE_DEPENDS "src/*.h")
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 conan_basic_setup()
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fcoroutines-ts -stdlib=libc++ -lc++experimental")
+
 add_library(training-raft-objects OBJECT ${SOURCES} ${HEADERS})
 target_link_libraries(training-raft-objects ${CONAN_LIBS})
 
