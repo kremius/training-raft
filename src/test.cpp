@@ -1,15 +1,17 @@
 #include "test.h"
 
-#include <experimental/coroutine>
-
 #include <iostream>
 
-void foo() {
+#include <boost/asio.hpp>
+
+boost::asio::awaitable<void> foo() {
     std::cout << "Hello" << std::endl;
-    co_await std::experimental::suspend_always();
     std::cout << "World" << std::endl;
+    co_return;
 }
 
 void test() {
-    // Do nothing
+    boost::asio::io_context io_context(1);
+    boost::asio::co_spawn(io_context, foo, boost::asio::detached);
+    io_context.run();
 }

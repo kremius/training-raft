@@ -14,11 +14,19 @@ file(GLOB_RECURSE HEADERS CONFIGURE_DEPENDS "src/*.h")
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 conan_basic_setup()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fcoroutines-ts -stdlib=libc++ -lc++experimental")
+# Seems like conan can't into pthread
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+
+# Enabling coroutines
+# TODO: set per target
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fcoroutines-ts -stdlib=libc++")
+# Disabling concepts because of asio bug https://github.com/boostorg/asio/issues/312
+add_definitions(-DBOOST_ASIO_DISABLE_CONCEPTS)
 
 add_library(training-raft-objects OBJECT ${SOURCES} ${HEADERS})
-target_link_libraries(training-raft-objects ${CONAN_LIBS})
+target_link_libraries(training-raft-objects ${CONAN_LIBS} ${CMAKE_THREAD_LIBS_INIT})
 
 add_executable(training-raft ${MAIN_FILE} $<TARGET_OBJECTS:training-raft-objects>)
 target_compile_options(training-raft PRIVATE ${STRICT_OPTIONS})
-
+target_link_libraries(training-raft Threads::Threads)
