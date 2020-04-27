@@ -9,7 +9,7 @@ using tcp = boost::asio::ip::tcp;
 
 asio::awaitable<void> listener() {
     auto executor = co_await asio::this_coro::executor;
-    tcp::acceptor acceptor(executor, tcp::endpoint(tcp::v4(), 4321));
+    tcp::acceptor acceptor(executor, {tcp::v4(), 4321});
 
     fmt::print("Starting accept new connections...\n");
 
