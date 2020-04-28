@@ -1,8 +1,7 @@
 #include "listener.h"
+#include "logging.h"
 
-#include <iostream>
-
-#include <fmt/core.h>
+using traft::operator""_format;
 
 int main(int /*argc*/, char */*argv*/[]) {
     try {
@@ -10,6 +9,6 @@ int main(int /*argc*/, char */*argv*/[]) {
         boost::asio::co_spawn(io_context, traft::listener, boost::asio::detached);
         io_context.run();
     } catch (const std::exception &ex) {
-        fmt::print("Error: {}\n", ex.what());
+        LOG(error) << "Error: {}\n"_format(ex.what());
     }
 }

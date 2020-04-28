@@ -1,9 +1,8 @@
 #include "listener.h"
 
-#include <fmt/core.h>
+#include "logging.h"
 
-namespace traft
-{
+namespace traft {
 
 using tcp = boost::asio::ip::tcp;
 
@@ -12,17 +11,17 @@ asio::awaitable<void> listener() {
         auto executor = co_await asio::this_coro::executor;
         tcp::acceptor acceptor(executor, {tcp::v4(), 4321});
 
-        fmt::print("Starting accept new connections...\n");
+        LOG(info) << "Starting accept new connections on {}...\n"_format(acceptor.local_endpoint().port());
 
         while (true) {
             tcp::socket socket = co_await acceptor.async_accept(asio::use_awaitable);
 
-            fmt::print("New incoming connection: {}\n", socket.remote_endpoint().address().to_string());
+            LOG(info) << "New incoming connection: {}\n"_format(socket.remote_endpoint().address().to_string());
 
             socket.close();
         }
     } catch (const std::exception &ex) {
-        fmt::print("Error: {}\n", ex.what());
+        LOG(error) << "Error: {}\n"_format(ex.what());
     }
 }
 
