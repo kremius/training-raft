@@ -9,6 +9,6 @@ int main(int /*argc*/, char */*argv*/[]) {
         boost::asio::co_spawn(io_context, traft::listener, boost::asio::detached);
         io_context.run();
     } catch (const std::exception &ex) {
-        LOG(error) << "Error: {}\n"_format(ex.what());
+        LOG(error) << "Error: {}"_format(ex.what());
     }
 }
