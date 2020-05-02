@@ -1,8 +1,6 @@
 #pragma once
 
-#include <boost/asio.hpp>
-
-namespace asio = boost::asio;
+#include "asio_with_aliases.h"
 
 namespace traft
 {

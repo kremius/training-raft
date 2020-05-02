@@ -8,22 +8,50 @@
 
 #include <boost/uuid/uuid.hpp>
 
+#include "asio_with_aliases.h"
+
 /*
-* Fully based on https://raft.github.io/raft.pdf
+* Based on https://raft.github.io/raft.pdf
 */
 
 namespace traft {
 
 using NodeId = boost::uuids::uuid;
 
+struct Command {
+    // TODO
+};
+
 struct LogEntry {
     int32_t term;
-    // Command command;
+    Command command;
 };
+
+namespace user {
+
+struct ReadRequest {
+    // TODO
+};
+
+struct ReadResponse {
+    // TODO
+};
+
+struct AppendResult {
+    // TODO
+};
+
+} // namespace user
 
 class Node {
 public:
-    // awaitable<json> userRequest()
+    asio::awaitable<user::AppendResponse> userAppendRequest(Command command) {
+        // co_await persistentWrite(command)
+        // co_await join(appendRpc)
+        // co_return
+    }
+    // TODO: this should be moved to state machine
+    // asio::awaitable<user::ReadResponse> userReadRequest(user::ReadRequest request);
 
     // awaitable<json> appendEntriesRpc()
     // awaitable<json> requestVoteRpc();
