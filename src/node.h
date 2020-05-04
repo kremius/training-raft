@@ -45,7 +45,7 @@ struct AppendResult {
 
 class Node {
 public:
-    asio::awaitable<user::AppendResponse> userAppendRequest(Command command) {
+    asio::awaitable<user::AppendResult> userAppendRequest(Command command) {
         // co_await persistentWrite(command)
         // co_await join(appendRpc)
         // co_return
