@@ -1,7 +1,5 @@
 #include "asio_with_aliases.h"
 
-#include <iostream>
-
 class ManualBrake {
 public:
     ManualBrake(asio::io_service& io_service) : io_service_(&io_service) {}
