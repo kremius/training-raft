@@ -1,6 +1,6 @@
 #pragma once
 
-#include <vector>
+#include <list>
 
 #include "asio_with_aliases.h"
 
@@ -13,7 +13,7 @@ class ConditionAwaiter {
     using ConditionType = std::function<bool(const DataType &)>;
 
 public:
-    ConditionAwaiter(asio::io_service *io_service) : io_service_(io_service) {
+    ConditionAwaiter(asio::io_context *io_service) : io_service_(io_service) {
         // Nothing
     }
 
@@ -63,7 +63,7 @@ private:
         return true;
     }
 
-    asio::io_service *io_service_;
+    asio::io_context *io_service_;
     DataType data_;
     // It's std::list because std::vector::erase requires assignment operator,
     // and HandlerType lacks it.

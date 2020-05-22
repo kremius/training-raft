@@ -1,6 +1,11 @@
 [requires]
 boost/1.72.0
 fmt/6.2.0
+gtest/1.10.0
 
 [generators]
 cmake
+
+[options]
+boost:asio_no_deprecated=True
+boost:without_test=True

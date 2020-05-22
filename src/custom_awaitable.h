@@ -2,7 +2,7 @@
 
 class ManualBrake {
 public:
-    ManualBrake(asio::io_service& io_service) : io_service_(&io_service) {}
+    ManualBrake(asio::io_context& io_service) : io_service_(&io_service) {}
 
     asio::awaitable<int> pause(int value, const asio::use_awaitable_t<>& token) {
         return async_initiate<const asio::use_awaitable_t<>, void (boost::system::error_code, int)>(
@@ -12,7 +12,7 @@ public:
             }, token, value);
     }
     void unpause() {
-        io_service_->post([this]() mutable {
+        asio::post(*io_service_, [this]() mutable {
             handler_.value()(boost::system::errc::make_error_code(boost::system::errc::success), value_ + 1);
             handler_.reset();
         });
@@ -21,5 +21,5 @@ private:
     using HandlerType = asio::async_result<asio::use_awaitable_t<>, void(boost::system::error_code, int)>::handler_type;
     std::optional<HandlerType> handler_;
     int value_;
-    asio::io_service *io_service_;
+    asio::io_context *io_service_;
 };
