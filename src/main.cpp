@@ -1,6 +1,6 @@
 #include "asio_with_aliases.h"
 #include "logging.h"
-#include "group_conditioned_await.h"
+#include "condition_awaiter.h"
 
 using traft::operator""_format;
 using namespace std::chrono_literals;

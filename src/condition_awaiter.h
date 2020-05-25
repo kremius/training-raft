@@ -13,11 +13,12 @@ class ConditionAwaiter {
     using ConditionType = std::function<bool(const DataType &)>;
 
 public:
-    ConditionAwaiter(asio::io_context *io_service) : io_service_(io_service) {
+    ConditionAwaiter(asio::io_context *io_service, DataType initial = DataType())
+        : io_service_(io_service), data_(initial) {
         // Nothing
     }
 
-    asio::awaitable<void> wait(ConditionType condition, const asio::use_awaitable_t<>& token) {
+    asio::awaitable<void> wait(ConditionType condition, const asio::use_awaitable_t<>& token = asio::use_awaitable) {
         return async_initiate<const asio::use_awaitable_t<>, void (boost::system::error_code)>(
             [this](auto handler, ConditionType condition) {
                 ConditionAndHandler waiter(std::move(condition), std::move(handler));
