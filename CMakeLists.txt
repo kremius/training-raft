@@ -12,7 +12,7 @@ file(GLOB_RECURSE HEADERS CONFIGURE_DEPENDS "src/*.h")
 file(GLOB_RECURSE TESTS CONFIGURE_DEPENDS "test/*.cpp")
 file(GLOB_RECURSE TESTS_HEADERS CONFIGURE_DEPENDS "test/*.h")
 
-# set(STRICT_OPTIONS -Wall -Wextra -Werror -ansi)
+set(STRICT_OPTIONS -Wall -Wextra -Werror -ansi)
 
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 conan_basic_setup()
@@ -29,6 +29,7 @@ add_definitions(-DBOOST_ASIO_DISABLE_CONCEPTS)
 
 # All src object files
 add_library(training-raft-objects OBJECT ${SOURCES} ${HEADERS})
+target_compile_options(training-raft-objects PRIVATE ${STRICT_OPTIONS})
 
 # Main executable
 add_executable(training-raft ${MAIN_FILE} $<TARGET_OBJECTS:training-raft-objects>)

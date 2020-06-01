@@ -45,10 +45,10 @@ struct AppendResult {
 
 class Node {
 public:
-    asio::awaitable<user::AppendResult> userAppendRequest(Command command) {
+    asio::awaitable<user::AppendResult> userAppendRequest(Command /*command*/) {
         // co_await persistentWrite(command)
         // co_await join(appendRpc)
-        // co_return
+        co_return user::AppendResult{};
     }
     // TODO: this should be moved to state machine
     // asio::awaitable<user::ReadResponse> userReadRequest(user::ReadRequest request);
@@ -57,13 +57,13 @@ public:
     // awaitable<json> requestVoteRpc();
 private:
     // Persistent state (so it should be saved to disk with flush)
-    int32_t current_term_ = 0;
+    // int32_t current_term_ = 0;
     std::optional<NodeId> voted_for_ = {};
     std::vector<LogEntry> log_;
 
     // Volatile state on all nodes
-    int32_t commit_index_ = 0;
-    int32_t last_applied_ = 0;
+    // int32_t commit_index_ = 0;
+    // int32_t last_applied_ = 0;
 
     // Volatile state on leader
     std::map<NodeId, int32_t> next_index_;

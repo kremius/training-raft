@@ -58,7 +58,7 @@ private:
         if (!waiter->condition(data_)) {
             return false;
         }
-        asio::post(*io_service_, [this, handler = std::move(waiter->handler)]() mutable {
+        asio::post(*io_service_, [handler = std::move(waiter->handler)]() mutable {
             handler(boost::system::errc::make_error_code(boost::system::errc::success));
         });
         return true;

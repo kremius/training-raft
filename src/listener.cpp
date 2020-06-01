@@ -1,7 +1,6 @@
 #include "listener.h"
 
 #include "logging.h"
-#include "custom_awaitable.h"
 
 namespace traft {
 
