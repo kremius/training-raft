@@ -9,6 +9,7 @@
 #include <boost/uuid/uuid.hpp>
 
 #include "asio_with_aliases.h"
+#include "forward_call.h"
 
 /*
 * Based on https://raft.github.io/raft.pdf
