@@ -2,8 +2,6 @@
 
 #include "condition_awaiter.h"
 
-#include "logging.h"
-
 TEST(ConditionAwaiter, Defaults) {
     asio::io_context context(1);
 
