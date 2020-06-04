@@ -9,14 +9,12 @@ namespace traft {
 // `from_executor` should be current executor.
 template<typename CallbackType>
 asio::awaitable<std::invoke_result_t<CallbackType>> forward_call(
-    asio::io_context &from_executor,
     asio::io_context &to_executor,
     CallbackType &&callback,
     const asio::use_awaitable_t<>& token = asio::use_awaitable) {
-    // TODO: can we actually just get current executor with `co_await asio::this_coro::executor`
-    // and then co_return async_initiate?
+    auto from_executor = co_await asio::this_coro::executor;
     // Using built-in asio free function in order to properly implement async call
-    return async_initiate<const asio::use_awaitable_t<>, void (boost::system::error_code, std::invoke_result_t<CallbackType>)>(
+    co_return co_await async_initiate<const asio::use_awaitable_t<>, void (boost::system::error_code, std::invoke_result_t<CallbackType>)>(
         // The lambda right below is called after the coroutine suspension
         [&from_executor, &to_executor](auto handler, CallbackType &&callback) {
             // Request execution of our 'callback' on the `to` executor
