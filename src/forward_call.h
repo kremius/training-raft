@@ -14,7 +14,7 @@ asio::awaitable<std::invoke_result_t<CallbackType>> forward_call(
     const asio::use_awaitable_t<>& token = asio::use_awaitable) {
     auto from_executor = co_await asio::this_coro::executor;
     // Using built-in asio free function in order to properly implement async call
-    co_return co_await async_initiate<const asio::use_awaitable_t<>, void (boost::system::error_code, std::invoke_result_t<CallbackType>)>(
+    co_return co_await async_initiate<const asio::use_awaitable_t<>, void (error_code, std::invoke_result_t<CallbackType>)>(
         // The lambda right below is called after the coroutine suspension
         [&from_executor, &to_executor](auto handler, CallbackType &&callback) {
             // Request execution of our 'callback' on the `to` executor
@@ -25,7 +25,7 @@ asio::awaitable<std::invoke_result_t<CallbackType>> forward_call(
                 asio::post(from_executor, [handler = std::move(handler), result = std::move(result)]() mutable {
                     // The line below will resume the coroutine which
                     // called 'co_await forward_call(from, to, [](){ /* something */ })' in the first place
-                    handler(boost::system::errc::make_error_code(boost::system::errc::success), std::move(result));
+                    handler(errc::make_error_code(errc::success), std::move(result));
                 });
             });
         }, token, std::forward<CallbackType>(callback));

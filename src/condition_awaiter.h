@@ -9,7 +9,7 @@ namespace traft {
 // TODO: no synchronization currently. Is it needed really?
 template<typename DataType>
 class ConditionAwaiter {
-    using HandlerType = asio::async_result<asio::use_awaitable_t<>, void(boost::system::error_code)>::handler_type;
+    using HandlerType = asio::async_result<asio::use_awaitable_t<>, void(error_code)>::handler_type;
     using ConditionType = std::function<bool(const DataType &)>;
 
 public:
@@ -19,7 +19,7 @@ public:
     }
 
     asio::awaitable<void> wait(ConditionType condition, const asio::use_awaitable_t<>& token = asio::use_awaitable) {
-        return async_initiate<const asio::use_awaitable_t<>, void (boost::system::error_code)>(
+        return async_initiate<const asio::use_awaitable_t<>, void (error_code)>(
             [this](auto handler, ConditionType condition) {
                 ConditionAndHandler waiter(std::move(condition), std::move(handler));
                 if (tryWakeUp(&waiter)) {
@@ -59,7 +59,7 @@ private:
             return false;
         }
         asio::post(*io_context_, [handler = std::move(waiter->handler)]() mutable {
-            handler(boost::system::errc::make_error_code(boost::system::errc::success));
+            handler(errc::make_error_code(errc::success));
         });
         return true;
     }
