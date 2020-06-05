@@ -4,7 +4,7 @@
 
 #include "logging.h"
 
-TEST(ForwardCall, Simple) {
+TEST(ForwardCall, Basics) {
     asio::io_context this_context;
     auto this_id = std::this_thread::get_id();
 
