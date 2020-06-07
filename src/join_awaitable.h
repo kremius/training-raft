@@ -21,6 +21,10 @@ asio::awaitable<std::variant<AwaitableTypes...>> fastest(asio::awaitable<Awaitab
         (boost::asio::co_spawn(
             executor,
             // TODO: check that 'executor' won't be removed too early
+            // If executor is strand is it possible it will be removed after some work will be done?
+            // But actually the callback should be destroyed when callback will be destroyed.
+            // >Handlers posted through the strand that have not yet been invoked will still be dispatched in a way that meets the guarantee of non-concurrency.
+            // Hmmmm. So there are two cases: usual context and strand
             [&executor, awaitables = std::move(awaitables), handler_store]() mutable -> asio::awaitable<void> {
                 auto result = co_await std::move(awaitables);
                 if (!handler_store->has_value()) {

@@ -7,6 +7,7 @@ namespace traft {
 // This function executes the `callback` on the `to` executor and then
 // awakes the coroutine with the result of the execution on the `from` executor.
 // `from_executor` should be current executor.
+// 'callback' should throw 'boost::system::system_error' exceptions
 template<typename CallbackType>
 asio::awaitable<std::invoke_result_t<CallbackType>> forward_call(
     asio::io_context &to_executor,
@@ -19,14 +20,21 @@ asio::awaitable<std::invoke_result_t<CallbackType>> forward_call(
         [&from_executor, &to_executor](auto handler, CallbackType &&callback) {
             // Request execution of our 'callback' on the `to` executor
             asio::post(to_executor, [handler = std::move(handler), &from_executor, callback = std::move(callback)]() mutable {
-                // Work's done on the line below
-                auto result = callback();
-                // Wake-up coroutine on the `from` executor
-                asio::post(from_executor, [handler = std::move(handler), result = std::move(result)]() mutable {
-                    // The line below will resume the coroutine which
-                    // called 'co_await forward_call(from, to, [](){ /* something */ })' in the first place
-                    handler(errc::make_error_code(errc::success), std::move(result));
-                });
+                try {
+                    // Work's done on the line below
+                    auto result = callback();
+                    // Wake-up coroutine on the `from` executor
+                    asio::post(from_executor, [handler = std::move(handler), result = std::move(result)]() mutable {
+                        // The line below will resume the coroutine which
+                        // called 'co_await forward_call(from, to, [](){ /* something */ })' in the first place
+                        handler(errc::make_error_code(errc::success), std::move(result));
+                    });
+                } catch (const boost::system::system_error &ex) {
+                    asio::post(from_executor, [handler = std::move(handler), code = ex.code()]() mutable {
+                        // The line below will resume the coroutine and throw exception
+                        handler(code, std::invoke_result_t<CallbackType>{});
+                    });
+                }
             });
         }, token, std::forward<CallbackType>(callback));
 }

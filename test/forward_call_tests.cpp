@@ -31,3 +31,24 @@ TEST(ForwardCall, Basics) {
     other_guard.reset();
     other_thread.join();
 }
+
+TEST(ForwardCall, Exceptions) {
+    asio::io_context context;
+
+    auto coroutine = [&]() -> asio::awaitable<void> {
+        EXPECT_THROW({
+            try {
+                co_await traft::forward_call(context, []() -> int {
+                    // TODO: custom error codes
+                    throw boost::system::system_error(asio::error::make_error_code(asio::error::timed_out));
+                });
+            } catch (const boost::system::system_error &error) {
+                EXPECT_EQ(error.code(), asio::error::make_error_code(asio::error::timed_out));
+                throw;
+            }
+        }, boost::system::system_error);
+    };
+
+    boost::asio::co_spawn(context, coroutine, boost::asio::detached);
+    context.run();
+}
