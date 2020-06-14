@@ -8,31 +8,30 @@ namespace traft {
 
 template<typename... AwaitableTypes>
 asio::awaitable<std::variant<AwaitableTypes...>> fastest(asio::awaitable<AwaitableTypes>... awaitables) {
-    // TODO: executor should always be strand
-    auto executor = co_await asio::this_coro::executor;
+    // To avoid race on completion handler among awaitables threads.
+    // Probably can be done in a more efficient way, but doesn't matter now.
+    auto strand = asio::make_strand(co_await asio::this_coro::executor);
 
     // The lambda right below is called after the coroutine suspension.
     // 'hanler' is the cororutine handler, so it should be called to resume coroutine.
-    auto implementation = [&executor, ...awaitables = std::move(awaitables)]<std::size_t... Indexes>(
+    auto implementation = [strand, ...awaitables = std::move(awaitables)]<std::size_t... Indexes>(
         auto handler, std::index_sequence<Indexes...>) mutable {
         // `HandlerType` is movable-only, so store is mandatory here
         auto handler_store = std::make_shared<std::optional<decltype(handler)>>();
         handler_store->emplace(std::move(handler));
         (boost::asio::co_spawn(
-            executor,
-            // TODO: check that 'executor' won't be removed too early
-            // If executor is strand is it possible it will be removed after some work will be done?
-            // But actually the callback should be destroyed when callback will be destroyed.
-            // >Handlers posted through the strand that have not yet been invoked will still be dispatched in a way that meets the guarantee of non-concurrency.
-            // Hmmmm. So there are two cases: usual context and strand
-            [&executor, awaitables = std::move(awaitables), handler_store]() mutable -> asio::awaitable<void> {
+            strand,
+            // Executor is captured by value, so it won't be removed early.
+            [strand, awaitables = std::move(awaitables), handler_store]() mutable -> asio::awaitable<void> {
                 auto result = co_await std::move(awaitables);
+                // It's possible to make here separate dispatch on strand, so the actual work on the line above
+                // can be done simultaneously.
                 if (!handler_store->has_value()) {
                     // We're too late - other awaiter was faster.
                     co_return;
                 }
-                asio::post(executor, [result = std::move(result), handler = std::move(handler_store->value())]() mutable {
-                    // TODO: exceptions?
+                asio::post(strand, [result = std::move(result), handler = std::move(handler_store->value())]() mutable {
+                    // TODO: exceptions
                     handler(
                         errc::make_error_code(errc::success),
                         std::variant<AwaitableTypes...>{std::in_place_index_t<Indexes>{}, std::move(result)});

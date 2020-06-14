@@ -13,6 +13,8 @@ asio::awaitable<std::invoke_result_t<CallbackType>> forward_call(
     asio::io_context &to_executor,
     CallbackType &&callback,
     const asio::use_awaitable_t<>& token = asio::use_awaitable) {
+    // TODO: seems like this won't return strand, need to check
+    // TODO: work guard is mandatory https://www.boost.org/doc/libs/1_73_0/doc/html/boost_asio/reference/asynchronous_operations.html
     auto from_executor = co_await asio::this_coro::executor;
     // Using built-in asio free function in order to properly implement async call
     co_return co_await async_initiate<const asio::use_awaitable_t<>, void (error_code, std::invoke_result_t<CallbackType>)>(
@@ -24,9 +26,10 @@ asio::awaitable<std::invoke_result_t<CallbackType>> forward_call(
                     // Work's done on the line below
                     auto result = callback();
                     // Wake-up coroutine on the `from` executor
+                    // TODO: maybe post here is not needed and everything is handled by handler?
                     asio::post(from_executor, [handler = std::move(handler), result = std::move(result)]() mutable {
                         // The line below will resume the coroutine which
-                        // called 'co_await forward_call(from, to, [](){ /* something */ })' in the first place
+                        // called 'co_await forward_call(to, [](){ /* something */ })' in the first place
                         handler(errc::make_error_code(errc::success), std::move(result));
                     });
                 } catch (const boost::system::system_error &ex) {
