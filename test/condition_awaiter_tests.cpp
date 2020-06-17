@@ -5,7 +5,7 @@
 TEST(ConditionAwaiter, Defaults) {
     asio::io_context context(1);
 
-    traft::ConditionAwaiter<int> awaiter(&context);
+    traft::ConditionAwaiter<int> awaiter(context.get_executor());
 
     bool finished = false;
     auto waiter = [&awaiter, &finished]() mutable -> asio::awaitable<void> {
@@ -25,7 +25,7 @@ TEST(ConditionAwaiter, Defaults) {
 TEST(ConditionAwaiter, Basics) {
     asio::io_context context(1);
 
-    traft::ConditionAwaiter<int> awaiter(&context);
+    traft::ConditionAwaiter<int> awaiter(context.get_executor());
 
     bool finished = false;
     auto waiter = [&awaiter, &finished]() mutable -> asio::awaitable<void> {
@@ -54,7 +54,7 @@ TEST(ConditionAwaiter, Basics) {
 TEST(ConditionAwaiter, MultipleWait) {
     asio::io_context context(1);
 
-    traft::ConditionAwaiter<int> awaiter(&context);
+    traft::ConditionAwaiter<int> awaiter(context.get_executor());
 
     bool finished1 = false;
     bool finished2 = false;

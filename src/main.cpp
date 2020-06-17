@@ -26,7 +26,7 @@ asio::awaitable<void> co_actions() {
 int main() {
     boost::asio::io_context io_context(1);
 
-    traft::ConditionAwaiter<int> test(&io_context);
+    traft::ConditionAwaiter<int> test(io_context.get_executor());
 
     test.updateData(0);
     awaiter = &test;

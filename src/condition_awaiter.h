@@ -13,8 +13,8 @@ class ConditionAwaiter {
     using ConditionType = std::function<bool(const DataType &)>;
 
 public:
-    ConditionAwaiter(asio::io_context *io_service, DataType initial = DataType())
-        : io_context_(io_service), data_(initial) {
+    ConditionAwaiter(asio::executor executor, DataType initial = DataType())
+        : executor_(executor), data_(initial) {
         // Nothing
     }
 
@@ -58,13 +58,13 @@ private:
         if (!waiter->condition(data_)) {
             return false;
         }
-        asio::post(*io_context_, [handler = std::move(waiter->handler)]() mutable {
+        asio::post(executor_, [handler = std::move(waiter->handler)]() mutable {
             handler(errc::make_error_code(errc::success));
         });
         return true;
     }
 
-    asio::io_context *io_context_;
+    asio::executor executor_;
     DataType data_;
     // It's std::list because std::vector::erase requires assignment operator,
     // and HandlerType lacks it.
