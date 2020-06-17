@@ -16,7 +16,7 @@ TEST(ForwardCall, Basics) {
     auto coroutine = [&]() -> asio::awaitable<void> {
         EXPECT_EQ(std::this_thread::get_id(), this_id);
         for (const int expected_result : std::vector<int>{844, 42, 100, -100000}) {
-            const int result = co_await traft::forward_call(other_context, [=] {
+            const int result = co_await traft::forward_call(other_context.get_executor(), [=] {
                 EXPECT_EQ(std::this_thread::get_id(), other_id);
                 return expected_result;
             });
@@ -38,7 +38,7 @@ TEST(ForwardCall, Exceptions) {
     auto coroutine = [&]() -> asio::awaitable<void> {
         EXPECT_THROW({
             try {
-                co_await traft::forward_call(context, []() -> int {
+                co_await traft::forward_call(context.get_executor(), []() -> int {
                     // TODO: custom error codes
                     throw boost::system::system_error(asio::error::make_error_code(asio::error::timed_out));
                 });

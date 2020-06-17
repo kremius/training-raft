@@ -10,18 +10,17 @@ namespace traft {
 // 'callback' should throw 'boost::system::system_error' exceptions
 template<typename CallbackType>
 asio::awaitable<std::invoke_result_t<CallbackType>> forward_call(
-    asio::io_context &to_executor,
+    asio::executor to_executor,
     CallbackType &&callback,
     const asio::use_awaitable_t<>& token = asio::use_awaitable) {
-    // TODO: seems like this won't return strand, need to check
     // TODO: work guard is mandatory https://www.boost.org/doc/libs/1_73_0/doc/html/boost_asio/reference/asynchronous_operations.html
     auto from_executor = co_await asio::this_coro::executor;
     // Using built-in asio free function in order to properly implement async call
     co_return co_await async_initiate<const asio::use_awaitable_t<>, void (error_code, std::invoke_result_t<CallbackType>)>(
         // The lambda right below is called after the coroutine suspension
-        [&from_executor, &to_executor](auto handler, CallbackType &&callback) {
+        [from_executor, to_executor](auto handler, CallbackType &&callback) {
             // Request execution of our 'callback' on the `to` executor
-            asio::post(to_executor, [handler = std::move(handler), &from_executor, callback = std::move(callback)]() mutable {
+            asio::post(to_executor, [handler = std::move(handler), from_executor, callback = std::move(callback)]() mutable {
                 try {
                     // Work's done on the line below
                     auto result = callback();

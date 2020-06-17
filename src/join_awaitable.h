@@ -13,7 +13,7 @@ asio::awaitable<std::variant<AwaitableTypes...>> fastest(asio::awaitable<Awaitab
     auto strand = asio::make_strand(co_await asio::this_coro::executor);
 
     // The lambda right below is called after the coroutine suspension.
-    // 'hanler' is the cororutine handler, so it should be called to resume coroutine.
+    // 'handler' is the cororutine handler, so it should be called to resume coroutine.
     auto implementation = [strand, ...awaitables = std::move(awaitables)]<std::size_t... Indexes>(
         auto handler, std::index_sequence<Indexes...>) mutable {
         // `HandlerType` is movable-only, so store is mandatory here
