@@ -2,7 +2,7 @@
 
 #include <chrono>
 
-#include "join_awaitable.h"
+#include "fastest_awaitable.h"
 
 #include "logging.h"
 
@@ -46,6 +46,40 @@ TEST(FastestAwaitable, Basics) {
         auto v2 = co_await traft::fastest(generate(10ms, Result2{2}), generate(0ms, Result2{1}));
         // TODO: ASSERT_EQ(v1.index(), 0);
         EXPECT_EQ(std::get<1>(v2).v, 1);
+    };
+
+    boost::asio::co_spawn(context, coroutine, boost::asio::detached);
+    context.run();
+}
+
+TEST(FastestAwaitable, Exceptions) {
+    asio::io_context context;
+
+    struct Result {};
+
+    auto generate = [&](auto duration, auto value) -> asio::awaitable<decltype(value)> {
+        boost::asio::steady_timer timer(context, duration);
+        co_await timer.async_wait(asio::use_awaitable);
+        co_return value;
+    };
+
+    auto raise = [&] (auto value) -> asio::awaitable<int> {
+        throw boost::system::system_error(value);
+        co_return 10;
+    };
+
+    // TODO: more tests
+    auto coroutine = [&]() -> asio::awaitable<void> {
+        EXPECT_THROW({
+            try {
+                co_await traft::fastest(
+                    raise(asio::error::make_error_code(asio::error::timed_out)),
+                    generate(3ms, Result{}));
+            } catch (const boost::system::system_error &error) {
+                EXPECT_EQ(error.code(), asio::error::make_error_code(asio::error::timed_out));
+                throw;
+            }
+        }, boost::system::system_error);
     };
 
     boost::asio::co_spawn(context, coroutine, boost::asio::detached);

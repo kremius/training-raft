@@ -6,6 +6,19 @@
 
 namespace traft {
 
+namespace impl {
+
+template <typename... Types>
+struct GetTemplateType;
+
+template <template <typename...> class Template, typename Type, typename... Other>
+struct GetTemplateType<Template<Type, Other...>>
+{
+    using Result = Type;
+};
+
+} // namespace impl
+
 template<typename... AwaitableTypes>
 asio::awaitable<std::variant<AwaitableTypes...>> fastest(asio::awaitable<AwaitableTypes>... awaitables) {
     // To avoid race on completion handler among awaitables threads.
@@ -23,17 +36,22 @@ asio::awaitable<std::variant<AwaitableTypes...>> fastest(asio::awaitable<Awaitab
             strand,
             // Executor is captured by value, so it won't be removed early.
             [strand, awaitables = std::move(awaitables), handler_store]() mutable -> asio::awaitable<void> {
-                auto result = co_await std::move(awaitables);
+                auto result = (typename impl::GetTemplateType<decltype(awaitables)>::Result){};
+                auto code = errc::make_error_code(errc::success);
+                try {
+                    result = std::move(co_await std::move(awaitables));
+                } catch (const boost::system::system_error &error) {
+                    code = error.code();
+                }
                 // It's possible to make here separate dispatch on strand, so the actual work on the line above
                 // can be done simultaneously.
                 if (!handler_store->has_value()) {
                     // We're too late - other awaiter was faster.
                     co_return;
                 }
-                asio::post(strand, [result = std::move(result), handler = std::move(handler_store->value())]() mutable {
-                    // TODO: exceptions
+                asio::post(strand, [result = std::move(result), code, handler = std::move(handler_store->value())]() mutable {
                     handler(
-                        errc::make_error_code(errc::success),
+                        code,
                         std::variant<AwaitableTypes...>{std::in_place_index_t<Indexes>{}, std::move(result)});
                 });
                 handler_store->reset();
